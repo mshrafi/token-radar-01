@@ -92,6 +92,16 @@ export const EARLY_ROWS = 160;
 /** How many live-token protocols the Live token view carries, by market cap. */
 export const LIVE_ROWS = 24;
 
+// --- Shared bounds for the category multiples -------------------------------------------
+// A category multiple is a median market-cap-per-TVL, so it is clamped to a sane band:
+// below 0.05 a protocol is barely priced at all, above 1.0 it is priced above its own TVL.
+const MULTIPLE_FLOOR = 0.05;
+const MULTIPLE_CAP = 1.0;
+// A category needs at least this many live-token comps before its own median is trusted;
+// thinner categories fall back to the overall median so one thin comp cannot stretch a
+// whole category's valuation.
+const MIN_LIVE_COMPS = 3;
+
 /** A farm step: the action, what it costs, and how long it takes. */
 export interface FarmStep {
   text: string;
@@ -216,11 +226,17 @@ function median(values: number[]): number | null {
   return sorted.length % 2 === 1 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
 }
 
+/** A raw median multiple, clamped to the sane band [MULTIPLE_FLOOR, MULTIPLE_CAP]. */
+function clampMultiple(value: number): number {
+  return Math.min(MULTIPLE_CAP, Math.max(MULTIPLE_FLOOR, value));
+}
+
 /**
  * Category comps, derived only from the snapshot: for each category, the median market-cap-per-
- * TVL of the live-token protocols in that category. A category with fewer than three live
- * protocols falls back to the overall median: one thin comp must not stretch a whole category.
- * Multiples are clamped to [0.05, 1.0] so one tiny-cap outlier cannot stretch a valuation.
+ * TVL of the live-token protocols in that category. A category with fewer than MIN_LIVE_COMPS
+ * live protocols falls back to the overall median: one thin comp must not stretch a whole
+ * category. Multiples are clamped to [MULTIPLE_FLOOR, MULTIPLE_CAP] so one tiny-cap outlier
+ * cannot stretch a valuation.
  */
 export function categoryMultiples(snapshot: Snapshot): { byCategory: Map<string, number>; overall: number } {
   const byCategory = new Map<string, number[]>();
@@ -236,15 +252,15 @@ export function categoryMultiples(snapshot: Snapshot): { byCategory: Map<string,
     byCategory.set(key, list);
   }
   const overallRaw = median(all) ?? 0.25;
-  const overall = Math.min(1.0, Math.max(0.05, overallRaw));
+  const overall = clampMultiple(overallRaw);
   const out = new Map<string, number>();
   for (const [key, values] of byCategory) {
-    if (values.length < 3) {
+    if (values.length < MIN_LIVE_COMPS) {
       out.set(key, overall);
       continue;
     }
     const m = median(values);
-    out.set(key, m === null ? overall : Math.min(1.0, Math.max(0.05, m)));
+    out.set(key, m === null ? overall : clampMultiple(m));
   }
   return { byCategory: out, overall };
 }
@@ -258,6 +274,35 @@ export function chainFactor(chains: string[], model: ModelConstants): number {
   return 1.0;
 }
 
+/**
+ * The growth multiplier: the 7-day change, clamped to [growth_floor, growth_cap], weighted
+ * by growth_weight. A protocol that fell 60% still keeps half its growth weight's drag;
+ * one that doubled in a week is capped at the same ceiling.
+ */
+function growthMultiplier(growthPct: number, model: ModelConstants): number {
+  return 1 + (growthPct / 100) * model.growth_weight;
+}
+
+/**
+ * The maturity multiplier: starts at maturity_floor for a brand-new protocol and rises
+ * linearly to maturity_floor + maturity_range over maturity_days (3 years). An unknown
+ * listing date is scored as unknown_age_days old, so it is neither newborn nor seasoned.
+ */
+function maturityMultiplier(age: number | null, model: ModelConstants): number {
+  const ageForModel = age ?? model.unknown_age_days;
+  const cappedAge = Math.min(Math.max(ageForModel, 0), model.maturity_days);
+  return model.maturity_floor + (cappedAge / model.maturity_days) * model.maturity_range;
+}
+
+/**
+ * The category factor: a category's own multiple, relative to the market-wide overall
+ * multiple, clamped to [category_factor_floor, category_factor_cap]. Categories whose live
+ * comps trade rich against TVL score up to twice the market; cheap ones score down to half.
+ */
+function categoryFactorFor(catMultiple: number, overall: number, model: ModelConstants): number {
+  return Math.min(model.category_factor_cap, Math.max(model.category_factor_floor, catMultiple / overall));
+}
+
 /** The three multipliers and the implied value one protocol gets under `model`. */
 export function impliedValue(
   protocol: SnapshotProtocol,
@@ -268,12 +313,12 @@ export function impliedValue(
   const age = ageDays(asOf, protocol.listed_at);
   const rawGrowth = finite(protocol.change_7d, 0);
   const growthPct = Math.min(model.growth_cap, Math.max(model.growth_floor, rawGrowth));
-  const growthMult = 1 + (growthPct / 100) * model.growth_weight;
-  const ageForModel = age ?? model.unknown_age_days;
-  const maturityMult = model.maturity_floor + (Math.min(Math.max(ageForModel, 0), model.maturity_days) / model.maturity_days) * model.maturity_range;
+  const growthMult = growthMultiplier(growthPct, model);
+  const maturityMult = maturityMultiplier(age, model);
   const catMultiple = comps.byCategory.get(protocol.category ?? 'Other') ?? comps.overall;
-  const catFactor = Math.min(model.category_factor_cap, Math.max(model.category_factor_floor, catMultiple / comps.overall));
+  const catFactor = categoryFactorFor(catMultiple, comps.overall, model);
   const chainF = chainFactor(protocol.chains, model);
+  // Young protocols are discounted: under young_age_days, the launch is still unproven.
   const youngF = age !== null && age < model.young_age_days ? model.young_factor : 1.0;
   const base = protocol.tvl_usd * model.base_multiple;
   const implied = Math.max(1, Math.round(base * growthMult * maturityMult * catFactor * chainF * youngF));
