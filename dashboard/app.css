@@ -31,19 +31,23 @@ a { color: var(--accent); }
 .skip { position: absolute; left: -9999px; top: 0; padding: var(--s2) var(--s4); background: var(--surface); border: 1px solid var(--border); z-index: 20; }
 .skip:focus { left: var(--s4); top: var(--s4); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.shell { max-width: 1320px; margin: 0 auto; padding: var(--s5) var(--s6) var(--s7); }
-.top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s5); padding-bottom: var(--s4); border-bottom: 1px solid var(--border); }
+.shell { max-width: 1320px; margin: 0 auto; padding: var(--s4) var(--s6) var(--s7); }
+.top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s5); padding-bottom: var(--s3); border-bottom: 1px solid var(--border); }
 .brand { display: flex; align-items: center; gap: var(--s3); }
 .mark { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); flex: none; }
 .brand-name { font-family: var(--font-num); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .top-meta { display: flex; flex-wrap: wrap; gap: var(--s3); justify-content: flex-end; color: var(--muted); font-size: 13px; }
 .top-meta span { white-space: nowrap; }
-.lede { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr); gap: var(--s6); padding: var(--s6) 0 var(--s5); }
+.lede { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr); gap: var(--s6); padding: var(--s5) 0 var(--s4); }
 .lede p { color: var(--muted); max-width: 62ch; margin-top: var(--s2); }
 .facts { display: grid; gap: var(--s2); align-content: start; border-left: 1px solid var(--border); padding-left: var(--s5); }
 .fact { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s3); }
 .fact b { font-family: var(--font-num); font-size: 15px; font-weight: 500; color: var(--ink); }
 .fact span { color: var(--muted); font-size: 13px; }
+.formula-strip { margin: var(--s2) 0 var(--s3); padding: var(--s3) var(--s4); border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); color: var(--muted); font-family: var(--font-num); font-size: 13px; line-height: 1.6; }
+caption { text-align: left; padding: var(--s3); }
+.risks { margin: 0; padding-left: var(--s4); display: grid; gap: var(--s1); font-size: 13px; color: var(--muted); }
+.risks li::marker { color: var(--gold); }
 .controls { display: flex; flex-wrap: wrap; align-items: end; gap: var(--s3); padding: var(--s4) 0; border-top: 1px solid var(--border); }
 .field { display: grid; gap: var(--s1); }
 .field label { color: var(--muted); font-size: 12px; }
@@ -56,7 +60,7 @@ a { color: var(--accent); }
 .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-panel); overflow: hidden; }
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
-th, td { padding: var(--s3); border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+th, td { padding: 8px var(--s3); border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
 th { color: var(--muted); font-size: 12px; font-weight: 500; white-space: nowrap; }
 th button { display: inline-flex; align-items: center; gap: var(--s1); border: 0; background: none; padding: 0; color: inherit; font: inherit; }
 th button:hover { color: var(--ink); }
@@ -82,7 +86,7 @@ tbody tr[data-selected="true"] { background: #1a2b23; }
 .empty p { color: var(--muted); }
 .button { min-height: 36px; padding: 0 var(--s4); border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface-2); }
 .button.primary { background: var(--accent); border-color: var(--accent); color: #0b0e11; font-weight: 600; }
-.detail { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 94vw); z-index: 10; background: var(--surface); color: var(--ink); border: 0; border-left: 1px solid var(--border); padding: var(--s5); overflow-y: auto; margin: 0 0 0 auto; max-height: 100%; }
+.detail { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 94vw); z-index: 10; background: var(--surface); color: var(--ink); border: 0; border-left: 1px solid var(--border); padding: var(--s3); overflow-y: auto; margin: 0 0 0 auto; max-height: 100%; font-size: 14px; }
 .detail[hidden] { display: none; }
 .detail::backdrop { background: rgba(0, 0, 0, 0.55); }
 .detail-head { display: flex; align-items: start; justify-content: space-between; gap: var(--s4); }
@@ -91,16 +95,16 @@ tbody tr[data-selected="true"] { background: #1a2b23; }
 .close { flex: none; min-width: 32px; min-height: 32px; padding: 0 var(--s2); white-space: nowrap; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface-2); color: var(--ink); }
 .detail h2 { margin-top: var(--s1); }
 .detail .sub { margin-top: var(--s1); }
-.detail-section { margin-top: var(--s5); padding-top: var(--s4); border-top: 1px solid var(--border); }
+.detail-section { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
 .detail-section h3 { margin-bottom: var(--s2); }
-.equation { display: grid; gap: var(--s2); font-family: var(--font-num); font-size: 13px; }
+.equation { display: grid; gap: 3px; font-family: var(--font-num); font-size: 13px; }
 .equation div { display: flex; justify-content: space-between; gap: var(--s3); }
 .equation span { color: var(--muted); }
 .equation b { font-weight: 500; }
 .comps { display: grid; gap: var(--s2); font-size: 13px; }
 .comps div { display: flex; justify-content: space-between; gap: var(--s3); }
 .comps span { color: var(--muted); }
-.steps { margin: 0; padding-left: var(--s5); display: grid; gap: var(--s3); }
+.steps { margin: 0; padding-left: var(--s4); display: grid; gap: 5px; font-size: 13px; line-height: 1.45; }
 .steps li { padding-left: var(--s1); }
 .steps b { display: block; font-weight: 500; }
 .cost { color: var(--muted); font-size: 12px; font-family: var(--font-num); }

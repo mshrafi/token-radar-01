@@ -7,8 +7,9 @@
 //
 // The dashboard is a static page, no framework and no network: dashboard/index.html, dashboard/
 // app.css and dashboard/app.js read /output/data.js, which this program writes from the same
-// board. The model is radar-2: a category-relative multiple from each category's own live-token
-// comps, a chain-diversity factor and a young-protocol discount, on top of TVL, growth and age.
+// board. The model is radar-3: a log-space OLS fit of mcap/TVL on centred log TVL over the
+// snapshot's own live-token protocols, plus shrunk category residuals and a small, deliberately
+// positive growth tilt (see lib/model.ts). Age has no multiplicative role; it is shown as context.
 //
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts --input ../token-radar-01-kit/input/snapshot.json
